@@ -7,16 +7,19 @@ const WHATSAPP_NUMBER = '77773971282'; // ← твой номер (без +)
 const SUPABASE_URL  = (import.meta as any).env?.VITE_SUPABASE_URL    ?? '';
 const SUPABASE_ANON = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY ?? '';
 
-// ---------- Supabase helper ----------
-async function fetchTokenPlan(token: string): Promise<'single' | 'unlimited' | null> {
+// ---------- Supabase helper — проверка по email ----------
+async function fetchEmailPlan(email: string): Promise<'single' | 'unlimited' | null> {
   if (!SUPABASE_URL || !SUPABASE_ANON) return null;
   try {
     const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/access_tokens?token=eq.${encodeURIComponent(token)}&select=plan`,
+      `${SUPABASE_URL}/rest/v1/access_users?email=eq.${encodeURIComponent(email.trim().toLowerCase())}&select=plan,is_active,plan_expires_at`,
       { headers: { apikey: SUPABASE_ANON, Authorization: `Bearer ${SUPABASE_ANON}` } }
     );
     const rows = await res.json();
-    return (rows?.[0]?.plan as 'single' | 'unlimited') ?? null;
+    const row = rows?.[0];
+    if (!row || !row.is_active) return null;
+    if (row.plan_expires_at && new Date(row.plan_expires_at) < new Date()) return null;
+    return (row.plan as 'single' | 'unlimited') ?? null;
   } catch { return null; }
 }
 
@@ -38,6 +41,84 @@ interface Log {
 // ---------- Helpers ----------
 function cn(...classes: (string | undefined | false | null)[]) {
   return classes.filter(Boolean).join(' ');
+}
+
+// ---------- Email login screen ----------
+function EmailLoginScreen({ lang, onLogin }: { lang: Lang; onLogin: (plan: Plan) => void }) {
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  async function handleSubmit() {
+    const trimmed = email.trim().toLowerCase();
+    if (!trimmed || !trimmed.includes('@')) {
+      setError(lang === 'ru' ? 'Введи корректный email' : 'Enter a valid email');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    const plan = await fetchEmailPlan(trimmed);
+    setLoading(false);
+    if (plan) {
+      onLogin(plan);
+    } else {
+      setError(lang === 'ru'
+        ? 'Доступ не найден. Проверь email или напиши нам в WhatsApp.'
+        : 'Access not found. Check your email or contact us on WhatsApp.');
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-luxury-graphite flex flex-col items-center justify-center p-8 z-50">
+      <div className="w-full max-w-sm">
+        <div className="text-center mb-8">
+          <div className="text-luxury-gold font-bold text-2xl mb-1">AI Architect</div>
+          <div className="text-luxury-silver/50 text-sm">WhatsApp Bot Academy</div>
+        </div>
+        <div className="bg-black/30 border border-white/10 rounded-2xl p-6">
+          <h2 className="text-white font-semibold text-lg mb-1">
+            {lang === 'ru' ? 'Войти в тренажёр' : 'Sign in to Academy'}
+          </h2>
+          <p className="text-luxury-silver/50 text-sm mb-6">
+            {lang === 'ru'
+              ? 'Введи email который указал при оплате'
+              : 'Enter the email you used when purchasing'}
+          </p>
+          <input
+            type="email"
+            value={email}
+            onChange={e => { setEmail(e.target.value); setError(''); }}
+            onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+            placeholder="example@gmail.com"
+            className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white text-sm placeholder-white/20 focus:outline-none focus:border-luxury-gold/50 transition-colors mb-3"
+          />
+          {error && (
+            <p className="text-red-400 text-xs mb-3">{error}</p>
+          )}
+          <button
+            onClick={handleSubmit}
+            disabled={loading}
+            className="w-full py-3 bg-luxury-gold text-black font-bold rounded-lg hover:bg-luxury-gold/80 transition-colors text-sm disabled:opacity-50"
+          >
+            {loading
+              ? (lang === 'ru' ? 'Проверяем...' : 'Checking...')
+              : (lang === 'ru' ? 'Войти →' : 'Sign in →')}
+          </button>
+          <p className="text-center text-luxury-silver/30 text-xs mt-4">
+            {lang === 'ru'
+              ? 'Ещё нет доступа? Первый урок бесплатно 👇'
+              : 'No access yet? First lesson is free 👇'}
+          </p>
+          <button
+            onClick={() => onLogin(null)}
+            className="w-full mt-2 py-2 text-luxury-silver/40 hover:text-luxury-silver/70 text-xs transition-colors"
+          >
+            {lang === 'ru' ? 'Попробовать бесплатный урок' : 'Try free lesson'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 // ---------- Mobile block screen ----------
@@ -1067,8 +1148,8 @@ function PaywallScreen({
             ? [
                 '1. Нажми кнопку — откроется WhatsApp с готовым сообщением',
                 '2. Отправь сообщение — мы ответим с реквизитами (Kaspi/карта)',
-                '3. После оплаты мы активируем твой доступ и пришлём подтверждение',
-                '4. Обнови эту страницу — курс откроется автоматически',
+                '3. После оплаты мы активируем доступ и пришлём подтверждение на email',
+                '4. Вернись на сайт, введи свой email — курс откроется',
               ]
             : [
                 '1. Click the button — WhatsApp opens with a pre-filled message',
@@ -1095,32 +1176,25 @@ function PaywallScreen({
 
 // ---------- Main App ----------
 export default function App() {
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
   const [lang, setLang] = useState<Lang>('ru');
   const [currentLessonId, setCurrentLessonId] = useState(1);
   const [completedIds, setCompletedIds] = useState<number[]>([]);
   const [lessonStates, setLessonStates] = useState<Record<number, LessonState>>({});
   const [plan, setPlan] = useState<Plan>(null);
   const [showPaywall, setShowPaywall] = useState(false);
-  // Token from URL — ?token=abc123
-  const [urlToken] = useState<string | null>(() => {
-    try { return new URLSearchParams(window.location.search).get('token'); } catch { return null; }
-  });
+  const [showEmailLogin, setShowEmailLogin] = useState(true);
   // Loading state while checking Supabase
   const [tokenChecking, setTokenChecking] = useState(false);
 
-  // On mount: if token in URL → check Supabase for plan
-  useEffect(() => {
-    if (!urlToken) return;
-    setTokenChecking(true);
-    fetchTokenPlan(urlToken).then(fetchedPlan => {
-      if (fetchedPlan) {
-        setPlan(fetchedPlan);
-        // If already paid, skip to lesson 2
-        setCurrentLessonId(2);
-      }
-      setTokenChecking(false);
-    });
-  }, [urlToken]);
+  // Handle email login
+  function handleEmailLogin(loggedPlan: Plan) {
+    setShowEmailLogin(false);
+    if (loggedPlan) {
+      setPlan(loggedPlan);
+      setCurrentLessonId(2);
+    }
+  }
 
   const currentLesson = LESSONS.find(l => l.id === currentLessonId)!;
   const lessonState = lessonStates[currentLessonId] || {};
@@ -1183,12 +1257,14 @@ export default function App() {
     }
   }
 
-  // Mobile detection
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-
-  // Loading while checking token
+  // Mobile block
   if (isMobile) {
     return <MobileBlock />;
+  }
+
+  // Email login screen
+  if (showEmailLogin) {
+    return <EmailLoginScreen lang={lang} onLogin={handleEmailLogin} />;
   }
 
   // Loading while checking token

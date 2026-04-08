@@ -3,7 +3,7 @@ import ReactMarkdown from 'react-markdown';
 import { LESSONS, Lesson } from './lessons';
 
 // ---------- Config — замени на свои значения ----------
-const WHATSAPP_NUMBER = '77001234567'; // ← твой номер (без +)
+const WHATSAPP_NUMBER = '77773971282'; // ← твой номер (без +)
 const SUPABASE_URL  = (import.meta as any).env?.VITE_SUPABASE_URL    ?? '';
 const SUPABASE_ANON = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY ?? '';
 

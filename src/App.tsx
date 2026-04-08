@@ -4,22 +4,17 @@ import { LESSONS, Lesson } from './lessons';
 
 // ---------- Config — замени на свои значения ----------
 const WHATSAPP_NUMBER = '77773971282'; // ← твой номер (без +)
-const SUPABASE_URL  = (import.meta as any).env?.VITE_SUPABASE_URL    ?? '';
-const SUPABASE_ANON = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY ?? '';
+const BOT_API_URL = 'https://web-production-9600c.up.railway.app';
 
-// ---------- Supabase helper — проверка по email ----------
+// ---------- Railway API helper — проверка по email ----------
 async function fetchEmailPlan(email: string): Promise<'single' | 'unlimited' | null> {
-  if (!SUPABASE_URL || !SUPABASE_ANON) return null;
   try {
     const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/access_users?email=eq.${encodeURIComponent(email.trim().toLowerCase())}&select=plan,is_active,plan_expires_at`,
-      { headers: { apikey: SUPABASE_ANON, Authorization: `Bearer ${SUPABASE_ANON}` } }
+      `${BOT_API_URL}/api/check-access?email=${encodeURIComponent(email.trim().toLowerCase())}`,
     );
-    const rows = await res.json();
-    const row = rows?.[0];
-    if (!row || !row.is_active) return null;
-    if (row.plan_expires_at && new Date(row.plan_expires_at) < new Date()) return null;
-    return (row.plan as 'single' | 'unlimited') ?? null;
+    const data = await res.json();
+    if (!data.access) return null;
+    return (data.plan as 'single' | 'unlimited') ?? null;
   } catch { return null; }
 }
 

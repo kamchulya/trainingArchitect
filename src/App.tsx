@@ -257,11 +257,13 @@ function InfoWorkspace({
   lang,
   state,
   onStateChange,
+  onAdvance,
 }: {
   lesson: Lesson;
   lang: Lang;
   state: LessonState;
   onStateChange: (updates: Partial<LessonState>) => void;
+  onAdvance?: () => void;
 }) {
   const txt = lesson[lang];
   const successKey =
@@ -271,8 +273,17 @@ function InfoWorkspace({
   const done = state[successKey];
 
   const buttonLabel = lang === 'ru'
-    ? (lesson.id === 1 ? 'Я готов начать →' : lesson.id === 6 ? 'Verify Webhook ✓' : 'Готово! ✓')
-    : (lesson.id === 1 ? "I'm ready to start →" : lesson.id === 6 ? 'Verify Webhook ✓' : 'Done! ✓');
+    ? (lesson.id === 1 ? 'Я готов начать →' : lesson.id === 6 ? 'Verify Webhook ✓' : lesson.id === 7 ? 'Создать ещё бота →' : 'Готово! ✓')
+    : (lesson.id === 1 ? "I'm ready to start →" : lesson.id === 6 ? 'Verify Webhook ✓' : lesson.id === 7 ? 'Build another bot →' : 'Done! ✓');
+
+  const nextLabel = lang === 'ru' ? 'Следующий урок →' : 'Next lesson →';
+
+  function handleClick() {
+    if (!done) {
+      onStateChange({ [successKey]: true });
+    }
+    if (onAdvance) onAdvance();
+  }
 
   return (
     <div className="flex flex-col h-full">
@@ -280,19 +291,12 @@ function InfoWorkspace({
         <MD>{txt.instructions}</MD>
       </div>
       <div className="p-4 border-t border-white/10 flex justify-end">
-        {done ? (
-          <div className="flex items-center gap-2 text-green-400 text-sm font-medium">
-            <span>✓</span>
-            <span>{lang === 'ru' ? 'Выполнено' : 'Completed'}</span>
-          </div>
-        ) : (
-          <button
-            onClick={() => onStateChange({ [successKey]: true })}
-            className="px-5 py-2.5 bg-luxury-gold text-black font-semibold rounded-lg hover:bg-luxury-gold/80 transition-colors text-sm"
-          >
-            {buttonLabel}
-          </button>
-        )}
+        <button
+          onClick={handleClick}
+          className="px-5 py-2.5 bg-luxury-gold text-black font-semibold rounded-lg hover:bg-luxury-gold/80 transition-colors text-sm"
+        >
+          {done && lesson.id !== 1 ? nextLabel : buttonLabel}
+        </button>
       </div>
     </div>
   );
@@ -1157,48 +1161,29 @@ function PaywallScreen({
   );
 }
 
-// ---------- localStorage helpers ----------
-const LS_KEY = 'ai_architect_progress';
-
-function loadProgress() {
-  try {
-    const raw = localStorage.getItem(LS_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw);
-  } catch { return null; }
-}
-
-function saveProgress(data: object) {
-  try { localStorage.setItem(LS_KEY, JSON.stringify(data)); } catch {}
-}
-
 // ---------- Main App ----------
 export default function App() {
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
-  // Load saved progress on first render
-  const saved = loadProgress();
-
-  const [lang, setLang] = useState<Lang>(saved?.lang ?? 'ru');
-  const [currentLessonId, setCurrentLessonId] = useState<number>(saved?.currentLessonId ?? 1);
-  const [completedIds, setCompletedIds] = useState<number[]>(saved?.completedIds ?? []);
-  const [lessonStates, setLessonStates] = useState<Record<number, LessonState>>(saved?.lessonStates ?? {});
-  const [plan, setPlan] = useState<Plan>(saved?.plan ?? null);
+  const [lang, setLang] = useState<Lang>('ru');
+  const [currentLessonId, setCurrentLessonId] = useState(1);
+  const [completedIds, setCompletedIds] = useState<number[]>([]);
+  const [lessonStates, setLessonStates] = useState<Record<number, LessonState>>({});
+  const [plan, setPlan] = useState<Plan>(() => {
+    try { return sessionStorage.getItem('aa_plan') as Plan ?? null; } catch { return null; }
+  });
   const [showPaywall, setShowPaywall] = useState(false);
-  const [showEmailLogin, setShowEmailLogin] = useState(!saved?.plan);
-  // Loading state
+  const [showEmailLogin, setShowEmailLogin] = useState(() => {
+    try { return !sessionStorage.getItem('aa_plan'); } catch { return true; }
+  });
   const [tokenChecking] = useState(false);
-
-  // Save progress whenever anything changes
-  useEffect(() => {
-    saveProgress({ lang, currentLessonId, completedIds, lessonStates, plan });
-  }, [lang, currentLessonId, completedIds, lessonStates, plan]);
 
   // Handle email login
   function handleEmailLogin(loggedPlan: Plan) {
     setShowEmailLogin(false);
     if (loggedPlan) {
       setPlan(loggedPlan);
+      try { sessionStorage.setItem('aa_plan', loggedPlan); } catch {}
       setCurrentLessonId(2);
     }
   }
@@ -1213,23 +1198,39 @@ export default function App() {
     }));
   }, [currentLessonId]);
 
-  // Auto-advance when lesson is completed; show paywall after lesson 1
+  // Auto-advance when lesson is completed — only mark as done, no auto-jump
   useEffect(() => {
     const state = lessonStates[currentLessonId] || {};
     const done = currentLesson.successCheck(state);
     if (done && !completedIds.includes(currentLessonId)) {
       setCompletedIds(prev => [...prev, currentLessonId]);
-      const nextId = currentLessonId + 1;
-      if (nextId <= LESSONS.length) {
-        if (currentLessonId === 1 && !plan) {
-          // After lesson 1 — if token already paid skip paywall, else show it
-          setTimeout(() => setShowPaywall(true), 800);
-        } else {
-          setTimeout(() => setCurrentLessonId(nextId), 800);
-        }
-      }
     }
-  }, [lessonStates, currentLessonId, currentLesson, completedIds, plan]);
+  }, [lessonStates, currentLessonId, currentLesson, completedIds]);
+
+  // Handle lesson advance button
+  function handleAdvance() {
+    const nextId = currentLessonId + 1;
+    // After lesson 1 — need plan to continue
+    if (currentLessonId === 1 && !plan) {
+      setShowPaywall(true);
+      return;
+    }
+    // After lesson 7 (last) — single plan shows paywall to upgrade, unlimited restarts
+    if (currentLessonId === LESSONS.length) {
+      if (plan === 'single') {
+        setShowPaywall(true);
+        return;
+      }
+      // unlimited — restart from lesson 1 with clean state
+      setCurrentLessonId(1);
+      setCompletedIds([]);
+      setLessonStates({});
+      return;
+    }
+    if (nextId <= LESSONS.length) {
+      setCurrentLessonId(nextId);
+    }
+  }
 
   // Unlock: proceed to lesson 2 after payment
   function handleUnlock(chosenPlan: Plan) {
@@ -1255,12 +1256,12 @@ export default function App() {
   function renderWorkspace() {
     const props = { lesson: currentLesson, lang, state: lessonState, onStateChange: updateState };
     switch (currentLesson.workspaceType) {
-      case 'info': return <InfoWorkspace {...props} />;
+      case 'info': return <InfoWorkspace {...props} onAdvance={handleAdvance} />;
       case 'form': return <FormWorkspace {...props} />;
       case 'knowledge': return <KnowledgeWorkspace {...props} />;
       case 'code': return <CodeWorkspace {...props} />;
       case 'terminal': return <TerminalWorkspace {...props} />;
-      default: return <InfoWorkspace {...props} />;
+      default: return <InfoWorkspace {...props} onAdvance={handleAdvance} />;
     }
   }
 

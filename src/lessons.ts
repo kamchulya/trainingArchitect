@@ -20,11 +20,67 @@ export const LESSONS: Lesson[] = [
     ru: {
       title: "Архитектура и Инструменты",
       successCondition: "Нажми 'Я готов начать'",
-      instructions: `### Шаг 1: Как это работает?
+      instructions: `## ⚠️ ВАЖНО — прочитай перед началом
+
+---
+
+### Твой бот будет ровно таким, каким ты его опишешь.
+
+ИИ не догадывается. Он не знает твой бизнес, твоих клиентов и твои правила. Всё что ты не написал — он придумает сам. И придумает неправильно.
+
+**Что бывает если промпт слабый:**
+- Бот называет несуществующие цены
+- Обещает то чего нет
+- Отвечает на языке который ты не выбрал
+- Не знает когда передать клиента менеджеру
+
+**Один плохой ответ клиенту = потерянная продажа.**
+
+---
+
+### Правило хорошего промпта — 5 блоков:
+
+**1. Кто он** — имя, роль, тон общения
+**2. Что знает** — услуги, цены, адрес, часы работы
+**3. Чего не делает** — запреты и ограничения
+**4. Когда зовёт менеджера** — жалобы, крупные заказы, нестандартные вопросы
+**5. Язык и стиль** — на каком языке отвечает, длина сообщений, эмодзи
+
+---
+
+### Пример слабого промпта ❌
+
+*«Ты помощник магазина. Отвечай на вопросы клиентов.»*
+
+Такой промпт — это катастрофа. Бот будет выдумывать цены, обещать что угодно и говорить на любом языке.
+
+---
+
+### Пример сильного промпта ✅
+
+*«Ты — Айгерим, вежливый помощник интернет-магазина детской одежды "Кішкентай". Отвечай на казахском и русском языках. Пиши коротко — максимум 3-4 строки. Называй только те цены которые есть в базе знаний — никаких других цифр. Если клиент хочет вернуть товар, жалуется или задаёт вопрос на который нет ответа в базе знаний — скажи ровно это: "Передаю вас менеджеру, он ответит в течение часа" — и больше ничего не добавляй. Никогда не обещай сроки доставки если они не указаны. Не давай скидки без разрешения. Не отвечай на оскорбления — вежливо заверши диалог.»*
+
+---
+
+### Технические правила для WhatsApp-бота:
+
+- **Короткие ответы** — максимум 3-4 строки. Клиенты не читают длинные сообщения
+- **Если не знает — не выдумывает** — всегда передаёт менеджеру
+- **Один вопрос за раз** — не засыпает клиента несколькими вопросами сразу
+- **Эмодзи умеренно** — максимум 1-2 в сообщении
+- **Никаких HTML тегов** — только простой текст
+
+---
+
+Запомни это — и твой бот будет работать правильно с первого дня.
+
+---
+
+### Шаг 1: Как это работает?
 
 Ты сейчас создашь **настоящего** WhatsApp-бота, который будет отвечать твоим клиентам вместо тебя — 24/7, без выходных.
 
-Никакого программирования учить не нужно. Весь код за тебя напишет **AI Ментор** (чат внизу). Твоя задача — понять логику и следовать инструкциям.
+Никакого программирования учить не нужно. Весь код за тебя напишет **AI Ментор** (чат справа). Твоя задача — понять логику и следовать инструкциям.
 
 ---
 
@@ -52,7 +108,7 @@ export const LESSONS: Lesson[] = [
 
 1. Создашь аккаунты на GitHub и Railway (бесплатно)
 2. Напишешь боту "личность" и базу знаний о своём бизнесе
-3. Попросишь ментора внизу написать код — скопируешь его
+3. Попросишь ментора написать код — скопируешь его
 4. Подключишь WhatsApp через Meta
 5. Запустишь бота
 
@@ -364,24 +420,23 @@ Something wrong? Tell the mentor: *"The code isn't working, here's the error: [e
       successCondition: "Выполни git push",
       instructions: `### Шаг 5: Отправляем код на Railway
 
-**1. Установи Git**
-- Windows: [git-scm.com](https://git-scm.com/download/win)
-- Mac: открой Terminal → \`git --version\`
-
-**2. Создай папку на Рабочем столе**
-
-- Правой кнопкой мыши на Рабочем столе → **"Создать папку"**
-- Назови её: \`whatsapp-bot\`
-- Положи внутрь файл \`main.py\` (из прошлого шага)
+Сейчас ты загрузишь файлы бота на GitHub — Railway подхватит их автоматически и запустит бота.
 
 ---
 
-**3. Получи остальные файлы у ментора**
+**1. Установи Git если ещё не установлен**
 
-Напиши ментору внизу:
-> *"Напиши мне готовые файлы requirements.txt и Procfile для WhatsApp бота на FastAPI"*
+- **Windows:** скачай и установи → [git-scm.com](https://git-scm.com/download/win) (всё по умолчанию, просто жми Next)
+- **Mac:** открой Terminal (Cmd+Space → напиши Terminal → Enter) → введи \`git --version\`. Если Git не установлен — Mac сам предложит установить.
 
-Скопируй содержимое каждого файла и создай их в папке \`whatsapp-bot\`.
+---
+
+**2. Создай папку на Рабочем столе**
+
+- Правой кнопкой мыши на Рабочем столе → **"Создать папку"** (Windows) или **"Новая папка"** (Mac)
+- Назови её: \`whatsapp-bot\`
+- Положи внутрь файл \`main.py\` из прошлого шага
+- Там же попроси ментора справа создать \`requirements.txt\` и \`Procfile\` — скопируй их содержимое в эти файлы в папке
 
 Папка должна выглядеть так:
 \`\`\`
@@ -393,17 +448,36 @@ whatsapp-bot/
 
 ---
 
-**4. Открой терминал прямо из папки**
+**3. Открой терминал внутри папки**
 
-- Зайди в папку \`whatsapp-bot\` на Рабочем столе
-- Нажми **правой кнопкой мыши** на пустом месте внутри папки
-- Выбери **"Git Bash Here"** (или "Открыть в терминале")
+**Windows:**
+- Зайди в папку \`whatsapp-bot\`
+- Нажми правой кнопкой мыши на пустом месте внутри папки
+- Выбери **"Git Bash Here"**
+- ✅ В строке терминала должно быть написано \`whatsapp-bot\`
 
-⚠️ Важно: терминал должен открыться **внутри папки whatsapp-bot**, а не где-то ещё! Проверь — в строке терминала должно быть написано \`whatsapp-bot\`.
+**Mac:**
+- Открой Terminal (Cmd+Space → Terminal)
+- Введи команду: \`cd ~/Desktop/whatsapp-bot\`
+- Нажми Enter
+- ✅ В строке терминала появится \`whatsapp-bot\`
+
+⚠️ Важно: терминал должен открыться **внутри папки whatsapp-bot**. Если это не так — бот не загрузится!
 
 ---
 
-**5. Выполни команды одну за другой:**
+**4. Возьми ссылку на GitHub**
+
+Зайди на [github.com](https://github.com) → открой репозиторий \`whatsapp-bot\` → нажми зелёную кнопку **"Code"** → скопируй ссылку вида:
+\`https://github.com/твоё_имя/whatsapp-bot.git\`
+
+---
+
+**5. Потренируйся в симуляторе справа**
+
+Симулятор — это тренажёр. Он не отправляет файлы, но помогает запомнить команды перед тем как вводить их по-настоящему.
+
+Введи команды в симуляторе справа в том же порядке что и в реальном терминале:
 
 \`\`\`
 git init
@@ -413,33 +487,40 @@ git remote add origin ВСТАВЬ_ССЫЛКУ_НА_GITHUB
 git push -u origin main
 \`\`\`
 
-💡 Жди знака \`$\` после каждой команды — это значит команда выполнена и можно вводить следующую.
+💡 Жди знака \`$\` после каждой команды — это значит команда выполнена.
 
-Railway запустит бота автоматически через 1-2 минуты.`,
+---
+
+**6. Теперь введи те же команды в настоящем терминале**
+
+Открой Git Bash (Windows) или Terminal (Mac) внутри папки \`whatsapp-bot\` — и введи те же команды.
+
+После \`git push\` Railway автоматически запустит бота через 1–2 минуты.
+
+Проверить: зайди на [railway.app](https://railway.app) → твой проект → должен появиться статус **"Active"** ✅`,
     },
     en: {
       title: "Deploy the Bot to the Server",
       successCondition: "Run git push",
       instructions: `### Step 5: Upload the code to Railway
 
-**1. Install Git**
-- Windows: [git-scm.com](https://git-scm.com/download/win)
-- Mac: open Terminal → \`git --version\`
+You'll now upload your bot files to GitHub — Railway will pick them up automatically and launch the bot.
+
+---
+
+**1. Install Git if you haven't already**
+
+- **Windows:** download and install → [git-scm.com](https://git-scm.com/download/win) (click Next through everything)
+- **Mac:** open Terminal (Cmd+Space → type Terminal → Enter) → type \`git --version\`. If Git isn't installed, Mac will offer to install it automatically.
+
+---
 
 **2. Create a folder on your Desktop**
 
 - Right-click on the Desktop → **"New Folder"**
 - Name it: \`whatsapp-bot\`
 - Put your \`main.py\` file inside (from the previous step)
-
----
-
-**3. Get the remaining files from the mentor**
-
-Type this to the mentor below:
-> *"Write me the ready-to-use contents of requirements.txt and Procfile for a WhatsApp bot on FastAPI"*
-
-Copy each file's content and create them inside the \`whatsapp-bot\` folder.
+- Ask the mentor on the right to generate \`requirements.txt\` and \`Procfile\` — copy their contents into those files in the folder
 
 The folder should look like:
 \`\`\`
@@ -451,17 +532,36 @@ whatsapp-bot/
 
 ---
 
-**4. Open the terminal directly from the folder**
+**3. Open the terminal inside the folder**
 
-- Open the \`whatsapp-bot\` folder on your Desktop
+**Windows:**
+- Open the \`whatsapp-bot\` folder
 - Right-click on an **empty area** inside the folder
-- Choose **"Git Bash Here"** (or "Open in Terminal")
+- Choose **"Git Bash Here"**
+- ✅ The terminal line should show \`whatsapp-bot\`
 
-⚠️ Important: the terminal must open **inside the whatsapp-bot folder**, not somewhere else! Check — the terminal line should show \`whatsapp-bot\`.
+**Mac:**
+- Open Terminal (Cmd+Space → Terminal)
+- Type: \`cd ~/Desktop/whatsapp-bot\`
+- Press Enter
+- ✅ The terminal line will show \`whatsapp-bot\`
+
+⚠️ Important: the terminal must open **inside the whatsapp-bot folder**. If it doesn't — the bot won't upload!
 
 ---
 
-**5. Run these commands one by one:**
+**4. Get your GitHub link**
+
+Go to [github.com](https://github.com) → open your \`whatsapp-bot\` repo → click the green **"Code"** button → copy the link:
+\`https://github.com/your_name/whatsapp-bot.git\`
+
+---
+
+**5. Practice in the simulator on the right**
+
+The simulator is a trainer — it doesn't actually send files, but helps you memorize the commands before running them for real.
+
+Type these commands in the simulator in the same order as you will in the real terminal:
 
 \`\`\`
 git init
@@ -471,9 +571,17 @@ git remote add origin PASTE_YOUR_GITHUB_LINK_HERE
 git push -u origin main
 \`\`\`
 
-💡 Wait for the \`$\` sign after each command — it means the command finished and you can type the next one.
+💡 Wait for the \`$\` sign after each command — it means the command is done.
 
-Railway will launch the bot automatically in 1–2 minutes.`,
+---
+
+**6. Now run the same commands in your real terminal**
+
+Open Git Bash (Windows) or Terminal (Mac) inside the \`whatsapp-bot\` folder — and type the same commands.
+
+After \`git push\`, Railway will automatically launch your bot in 1–2 minutes.
+
+To verify: go to [railway.app](https://railway.app) → your project → you should see status **"Active"** ✅`,
     },
   },
   {

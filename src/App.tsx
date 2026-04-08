@@ -1157,18 +1157,42 @@ function PaywallScreen({
   );
 }
 
+// ---------- localStorage helpers ----------
+const LS_KEY = 'ai_architect_progress';
+
+function loadProgress() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch { return null; }
+}
+
+function saveProgress(data: object) {
+  try { localStorage.setItem(LS_KEY, JSON.stringify(data)); } catch {}
+}
+
 // ---------- Main App ----------
 export default function App() {
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-  const [lang, setLang] = useState<Lang>('ru');
-  const [currentLessonId, setCurrentLessonId] = useState(1);
-  const [completedIds, setCompletedIds] = useState<number[]>([]);
-  const [lessonStates, setLessonStates] = useState<Record<number, LessonState>>({});
-  const [plan, setPlan] = useState<Plan>(null);
+
+  // Load saved progress on first render
+  const saved = loadProgress();
+
+  const [lang, setLang] = useState<Lang>(saved?.lang ?? 'ru');
+  const [currentLessonId, setCurrentLessonId] = useState<number>(saved?.currentLessonId ?? 1);
+  const [completedIds, setCompletedIds] = useState<number[]>(saved?.completedIds ?? []);
+  const [lessonStates, setLessonStates] = useState<Record<number, LessonState>>(saved?.lessonStates ?? {});
+  const [plan, setPlan] = useState<Plan>(saved?.plan ?? null);
   const [showPaywall, setShowPaywall] = useState(false);
-  const [showEmailLogin, setShowEmailLogin] = useState(true);
+  const [showEmailLogin, setShowEmailLogin] = useState(!saved?.plan);
   // Loading state
   const [tokenChecking] = useState(false);
+
+  // Save progress whenever anything changes
+  useEffect(() => {
+    saveProgress({ lang, currentLessonId, completedIds, lessonStates, plan });
+  }, [lang, currentLessonId, completedIds, lessonStates, plan]);
 
   // Handle email login
   function handleEmailLogin(loggedPlan: Plan) {

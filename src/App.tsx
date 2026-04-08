@@ -1013,11 +1013,9 @@ type Plan = 'single' | 'unlimited' | null;
 // ---------- Paywall Screen ----------
 function PaywallScreen({
   lang,
-  token,
   onUnlock,
 }: {
   lang: Lang;
-  token: string | null;
   onUnlock: (plan: Plan) => void;
 }) {
   const [selected, setSelected] = useState<Plan>(null);
@@ -1050,10 +1048,9 @@ function PaywallScreen({
     if (!selected || !selectedPlan) return;
     const planLabel = selectedPlan.title;
     const price     = selectedPlan.price;
-    const tok       = token || '—';
     const msg = lang === 'ru'
-      ? `Здравствуйте! Хочу оплатить курс AI Architect Academy.\nТариф: ${planLabel} — ${price}\nМой токен: ${tok}`
-      : `Hello! I want to purchase AI Architect Academy.\nPlan: ${planLabel} — ${price}\nMy token: ${tok}`;
+      ? `Здравствуйте! Хочу оплатить курс AI Architect Academy.\nТариф: ${planLabel} — ${price}`
+      : `Hello! I want to purchase AI Architect Academy.\nPlan: ${planLabel} — ${price}`;
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
   }
 
@@ -1162,13 +1159,6 @@ function PaywallScreen({
           ))}
         </div>
 
-        {/* Token debug info (only if token present) */}
-        {token && (
-          <p className="text-center text-white/20 text-xs mt-3">
-            token: <code className="font-mono">{token}</code>
-          </p>
-        )}
-
       </div>
     </div>
   );
@@ -1184,8 +1174,8 @@ export default function App() {
   const [plan, setPlan] = useState<Plan>(null);
   const [showPaywall, setShowPaywall] = useState(false);
   const [showEmailLogin, setShowEmailLogin] = useState(true);
-  // Loading state while checking Supabase
-  const [tokenChecking, setTokenChecking] = useState(false);
+  // Loading state
+  const [tokenChecking] = useState(false);
 
   // Handle email login
   function handleEmailLogin(loggedPlan: Plan) {
@@ -1314,7 +1304,7 @@ export default function App() {
               ))}
             </div>
           </header>
-          <PaywallScreen lang={lang} token={urlToken} onUnlock={handleUnlock} />
+          <PaywallScreen lang={lang} onUnlock={handleUnlock} />
         </div>
       </div>
     );

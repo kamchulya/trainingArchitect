@@ -747,10 +747,10 @@ function TerminalWorkspace({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="overflow-y-auto p-4 border-b border-white/10 max-h-40 shrink-0">
+      <div className="flex-1 overflow-y-auto p-6 border-b border-white/10">
         <MD>{txt.instructions}</MD>
       </div>
-      <div className="flex-1 flex flex-col min-h-0 p-3 gap-2">
+      <div className="h-64 flex flex-col min-h-0 p-3 gap-2 shrink-0">
         <div className="flex items-center gap-2 px-1">
           <div className="w-2.5 h-2.5 rounded-full bg-red-500/60" />
           <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/60" />

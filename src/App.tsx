@@ -40,6 +40,30 @@ function cn(...classes: (string | undefined | false | null)[]) {
   return classes.filter(Boolean).join(' ');
 }
 
+// ---------- Mobile block screen ----------
+function MobileBlock() {
+  return (
+    <div className="fixed inset-0 bg-luxury-graphite flex flex-col items-center justify-center p-8 text-center z-50">
+      <div className="text-6xl mb-6">💻</div>
+      <div className="text-luxury-gold font-bold text-xl mb-3">
+        AI Architect Academy
+      </div>
+      <div className="text-white font-semibold text-lg mb-4">
+        Тренажёр работает только на компьютере или ноутбуке
+      </div>
+      <div className="text-luxury-silver/60 text-sm leading-relaxed max-w-xs mb-8">
+        Открой эту ссылку на ПК или ноутбуке — и начнём. Мобильная версия не поддерживается, потому что здесь нужен полноценный рабочий экран.
+      </div>
+      <div className="bg-black/30 border border-white/10 rounded-2xl p-5 w-full max-w-xs">
+        <div className="text-luxury-silver/50 text-xs mb-3 uppercase tracking-wider">Скопируй ссылку и открой на ПК</div>
+        <div className="bg-black/40 border border-luxury-gold/20 rounded-lg px-3 py-2 text-luxury-gold text-xs font-mono break-all select-all">
+          {window.location.href}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ---------- Markdown renderer ----------
 function MD({ children }: { children: string }) {
   return (
@@ -1157,6 +1181,14 @@ export default function App() {
       case 'terminal': return <TerminalWorkspace {...props} />;
       default: return <InfoWorkspace {...props} />;
     }
+  }
+
+  // Mobile detection
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
+  // Loading while checking token
+  if (isMobile) {
+    return <MobileBlock />;
   }
 
   // Loading while checking token
